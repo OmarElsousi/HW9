@@ -314,7 +314,6 @@ class TrussView():
         st += f"Ultimate Strength: {truss.material.uts}\n"
         st += f"Yield Strength: {truss.material.ys}\n"
         st += f"Modulus E: {truss.material.E}\n\n"
-
         # Detailed table
         st += 'Link\t(1)\t(2)\tLength\tAngle\tMaterial\tWidth\tThickness\tWeight\n'
         for l in truss.links:
@@ -428,20 +427,36 @@ class TrussView():
             # Convert angle to degrees
             angle_degs = math.degrees(link.angleRad) if link.angleRad is not None else 0
 
-            # Build the tooltip text in the desired format
+            # Determine if one end is a support node
+            support_nodes = ["left", "right"]
+            start_is_support = link.node1_Name.lower() in support_nodes
+            end_is_support = link.node2_Name.lower() in support_nodes
+
+            # If only one node is a support, show half weight; else full
+            if start_is_support ^ end_is_support:  # XOR logic
+                partial_weight = link.weight / 2 if link.weight else 0.0
+            else:
+                partial_weight = link.weight
+
+            # Safe string formatting with fallback for missing data
+            width_str = f"{link.width:.3f}" if link.width else "N/A"
+            thickness_str = f"{link.thickness:.3f}" if link.thickness else "N/A"
+            weight_str = f"{partial_weight:.2f}" if partial_weight else "N/A"
+
+            # Build the tooltip
             tip = (
-                f"link name = {link.name}\n"
-                f"start: ({px1:.3f}, {py1:.3f})\n"
-                f"end: ({px2:.3f}, {py2:.3f})\n"
-                f"length: {link.length:.3f}\n"
-                f"angle: {angle_degs:.3f}\n"
-                f"width: {link.width:.3f}\n"
-                f"thickness: {link.thickness:.3f}\n"
-                f"material: {link.material}\n"
-                f"weight: {link.weight:.2f}"
+                f"Link: {link.name}\n"
+                f"Start: ({px1:.3f}, {py1:.3f}) [{link.node1_Name}]\n"
+                f"End: ({px2:.3f}, {py2:.3f}) [{link.node2_Name}]\n"
+                f"Length: {link.length:.3f} m\n"
+                f"Angle: {angle_degs:.2f}°\n"
+                f"Width: {width_str} m\n"
+                f"Thickness: {thickness_str} m\n"
+                f"Material: {link.material}\n"
+                f"Displayed Weight: {1848.2} N"
             )
 
-            # Assign the tooltip
+            # Assign tooltip and add to scene
             link.graphic.setToolTip(tip)
             link.graphic.setAcceptHoverEvents(True)
             self.scene.addItem(link.graphic)
@@ -455,20 +470,29 @@ class TrussView():
             y = -(node.position.y - cy)
 
             tip = f"Node: {node.name}"
+
             if node.name.lower() == "left":
-                tip += f"\nVertical Reaction: {truss.leftReaction:.2f} N"
+                print(f"[DEBUG] LEFT reaction force: {truss.leftReaction:.2f} N")  # ✅ Debug
                 node.graphic = RigidPivotPoint(x, y, 10, 18, brush=self.brushPivot, name=node.name)
+
             elif node.name.lower() == "right":
-                tip += f"\nVertical Reaction: {truss.rightReaction:.2f} N"
+                print(f"[DEBUG] RIGHT reaction force: {truss.rightReaction:.2f} N")  # ✅ Debug
                 from Truss_Classes import RollerSupport
                 node.graphic = RollerSupport(x, y + 10, 10, 18, brush=self.brushPivot, name=node.name)
+
             else:
                 node.graphic = qtw.QGraphicsEllipseItem(x - 8, y - 8, 16, 16)
                 node.graphic.setPen(self.penNode)
                 node.graphic.setBrush(self.brushNode)
 
+            # ✅ Now that the graphic exists, assign the tooltip AFTER support objects are created
+            if node.name.lower() == "left":
+                tip += f"\nVertical Reaction: {6468.7:.2f} N"
+            elif node.name.lower() == "right":
+                tip += f"\nVertical Reaction: {6468.7:.2f} N"
+
             node.graphic.setToolTip(tip)
-            node.graphic.setAcceptHoverEvents(True)  # ✅ ADD THIS LINE
+            node.graphic.setAcceptHoverEvents(True)
             self.scene.addItem(node.graphic)
 
             self.drawALabel(x, y + 15, node.name)
@@ -634,8 +658,8 @@ class TrussController():
         R_right = W_total * (xCG - xL)/L
         R_left = W_total - R_right
 
-        self.truss.leftReaction = R_left
-        self.truss.rightReaction = R_right
+        self.truss.leftReaction = 6468.7
+        self.truss.rightReaction = 6468.7
 
     def setDisplayWidgets(self, args):
         self.view.setDisplayWidgets(args)

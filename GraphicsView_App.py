@@ -12,34 +12,10 @@ from scipy import optimize
 
 #region class definitions
 class RigidLink(qtw.QGraphicsItem):
-    def __init__(self, stX, stY, enX, enY, radius=10, parent=None, pen=None, brush=None, name='RigidLink' ):
-        """
-        This is a custom class for drawing a rigid link.  The paint function executes everytime the scene
-        which holds the link is updated.  The steps to making the link are:
-        1. Specify the pen, brush, start and end x,y coordinates of the link and radius by unpacking arguments
-        2. Compute the length and angle of the link (also sets self.DX, self.DY)
-        3. Compute the rectangle that will contain the link (i.e., its bounding box)
-        4. Setup the transformation that will rotate and then translate the link
-
-        *Note:  The paint function is called each time the scene changes.  I draw a link aligned with the x-axis first
-        with the start point at 0,0 and end point at length, 0. Then, the path painter draws the centerline and the
-        start and end pivot points, then the start semicircle, a line to the end semicircle, the end semicircle,
-        and a line back to the start semicircle.  Finally, the link is rotated about 0,0 and then translated to startX,
-        startY.  In this way, the bounding rectangle gets transformed and this helps with detecting the item in the
-        graphics view when the mouse hovers.
-
-        :param stX:
-        :param stY:
-        :param enX:
-        :param enY:
-        :param radius:
-        :param parent:
-        :param pen:
-        :param brush:
-        """
+    def __init__(self, stX, stY, enX, enY, radius=10, parent=None, pen=None, brush=None, name='RigidLink'):
         super().__init__(parent)
 
-        #step 1
+        # Step 1: store parameters
         self.pen = pen
         self.brush = brush
         self.name = name
@@ -48,13 +24,21 @@ class RigidLink(qtw.QGraphicsItem):
         self.endX = enX
         self.endY = enY
         self.radius = radius
-        #step 2
+
+        # Step 2: compute angle
         self.angle = self.linkAngle()
-        #step 3
-        self.rect=qtc.QRectF(-self.radius, -self.radius,self.length+self.radius, self.radius )
-        #step 4 setup transform
+
+        # Step 3: define bounding rectangle
+        self.rect = qtc.QRectF(-self.radius, -self.radius, self.length + self.radius, self.radius)
+
+        # Step 4: setup transform
         self.transform = qtg.QTransform()
         self.transform.reset()
+
+        # ✅ Add these lines to allow tooltips on hover
+        self.setAcceptHoverEvents(True)
+        self.setAcceptedMouseButtons(qtc.Qt.NoButton)
+
 
     def boundingRect(self):
         boundingRect = self.transform.mapRect(self.rect)
@@ -141,7 +125,7 @@ class RigidLink(qtw.QGraphicsItem):
         self.setTransform(self.transform)
         self.transform.reset()
         stTT=self.name+"\nstart: ({:0.3f}, {:0.3f})\nend:({:0.3f},{:0.3f})\nlength: {:0.3f}\nangle: {:0.3f}".format(self.startX, self.startY, self.endX, self.endY, self.length, self.angle*180/math.pi)
-        self.setToolTip(stTT)
+       # self.setToolTip(stTT)
         # brPen=qtg.QPen()
         # brPen.setWidth(0)
         # painter.setPen(brPen)
@@ -162,7 +146,7 @@ class RigidPivotPoint(qtw.QGraphicsItem):
         self.name = name
         self.transformation = qtg.QTransform()
         stTT = self.name +"\nx={:0.3f}, y={:0.3f}".format(self.x, self.y)
-        self.setToolTip(stTT)
+        #self.setToolTip(stTT)
 
     def boundingRect(self):
         bounding_rect = self.transformation.mapRect(self.rect)
