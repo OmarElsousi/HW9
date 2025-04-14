@@ -481,7 +481,7 @@ class TrussView():
                 node.graphic = RollerSupport(x, y + 10, 10, 18, brush=self.brushPivot, name=node.name)
 
             else:
-                node.graphic = qtw.QGraphicsEllipseItem(x - 8, y - 8, 16, 16)
+                node.graphic = qtw.QGraphicsEllipseItem(x - 2, y - 2, 4, 4)
                 node.graphic.setPen(self.penNode)
                 node.graphic.setBrush(self.brushNode)
 
