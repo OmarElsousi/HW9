@@ -28,7 +28,7 @@ class RollerSupport(RigidPivotPoint):
     def paint(self, painter, option, widget=None):
         painter.save()
         # Shift entire drawing upward so top touches node
-        painter.translate(0, -self.h)
+        painter.translate(0, -self.h + 12)
 
         painter.setPen(self.pen or qtg.QPen(qtc.Qt.black))
         painter.setBrush(self.brush or qtg.QBrush(qtc.Qt.gray))
